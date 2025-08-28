@@ -1,0 +1,17 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+@import "tailwindcss";
+
+:root {
+  font-family: "Outfit", "sans-serif";
+}
+html {
+  scrollbar-gutter: stable;
+}
+
+button {
+  cursor: pointer;
+}
+.backdrop-blur-webkit {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
