@@ -3,3 +3,13 @@ export type UserPosition =
   | "committee_member"
   | "officer"
   | "executive";
+
+export enum SortOrder {
+  ascending,
+  descending,
+}
+export enum Endpoint {
+  external,
+  inventory,
+  event,
+}

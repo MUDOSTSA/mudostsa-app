@@ -4,13 +4,33 @@
   import { onMount } from "svelte";
   import InventoryTable from "../../../components/InventoryTable.svelte";
 
-  let data: InventoryItem[] = [];
+  let data: InventoryItem[] = $state([]);
+  let loading = $state(true);
+
+  async function loadInventoryData() {
+    loading = true;
+    try {
+      const result = await readInventory();
+      data = result.data || [];
+    } catch (error) {
+      console.error("Failed to load inventory:", error);
+      data = [];
+    } finally {
+      loading = false;
+    }
+  }
+
   onMount(async () => {
-    const result = await readInventory();
-    data = result.data || [];
+    await loadInventoryData();
   });
 </script>
 
-<div class="p-12">
-  <InventoryTable items={data} />
+<div class="p-4 h-full overflow-hidden">
+  <InventoryTable items={data} {loading} onRefresh={loadInventoryData} />
 </div>
+
+<style>
+  div {
+    box-sizing: border-box;
+  }
+</style>

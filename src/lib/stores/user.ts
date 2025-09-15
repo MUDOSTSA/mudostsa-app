@@ -1,25 +1,14 @@
 import { writable, derived } from "svelte/store";
 import { supabase } from "../supabase";
 import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
+import type { Profile } from "$lib/types";
 
 // Define the profile type based on your database schema
-export interface UserProfile {
-  user_id: string;
-  first_name: string;
-  last_name: string;
-  display_name: string;
-  position: string;
-  avatar?: string;
-  email?: string;
-  created_at: string;
-  updated_at: string;
-}
-
 // Auth user store
 export const authUser = writable<User | null>(null);
 
 // Profile data store
-export const userProfile = writable<UserProfile | null>(null);
+export const userProfile = writable<Profile | null>(null);
 
 // Loading states
 export const isLoadingAuth = writable<boolean>(true);
@@ -96,7 +85,7 @@ export const fetchUserProfile = async (userId: string) => {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select("*,memberships(active)")
       .eq("user_id", userId)
       .single();
 
@@ -106,9 +95,9 @@ export const fetchUserProfile = async (userId: string) => {
       userProfile.set(null);
       return null;
     }
-
-    userProfile.set(data);
-    return data;
+    let modifiedData = { membership: data.memberships[0].active, ...data };
+    userProfile.set(modifiedData);
+    return modifiedData;
   } catch (error) {
     console.error("Error fetching profile:", error);
     userError.set(error instanceof Error ? error.message : "Unknown error");
@@ -120,7 +109,7 @@ export const fetchUserProfile = async (userId: string) => {
 };
 
 // Update user profile
-export const updateUserProfile = async (updates: Partial<UserProfile>) => {
+export const updateUserProfile = async (updates: Partial<Profile>) => {
   try {
     isLoadingProfile.set(true);
     userError.set(null);
@@ -174,7 +163,7 @@ export const signOutUser = async () => {
 
 // Helper functions for easy access
 export const getUserProfile = () => {
-  let profile: UserProfile | null = null;
+  let profile: Profile | null = null;
   userProfile.subscribe((value) => (profile = value))();
   return profile;
 };
