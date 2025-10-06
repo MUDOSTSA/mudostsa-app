@@ -13,6 +13,7 @@
   import InventoryRow from "./InventoryRow.svelte";
   import MaterialIcon from "./MaterialIcon.svelte";
   import Throbber from "./Throbber.svelte";
+  import { downloadCsv } from "$lib/csv";
 
   let {
     items,
@@ -93,6 +94,21 @@
     selectedItems = {}; // Clear selection after successful delete
     onRefresh?.(); // Refresh the data
   }
+  function exportToCSV() {
+    let date = new Date();
+    if (selectedItems && Object.keys(selectedItems).length > 0) {
+      const itemsToExport = Object.values(selectedItems);
+      downloadCsv(
+        itemsToExport,
+        `generated_selected_inventory_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.csv`
+      );
+      return;
+    }
+    downloadCsv(
+      items,
+      `generated_inventory_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.csv`
+    );
+  }
 </script>
 
 <AddInventoryDialog bind:shown={addDialogShown} onSuccess={handleSuccess}
@@ -145,6 +161,7 @@
         Add
       </button>
       <button
+        onclick={exportToCSV}
         class="flex items-center justify-center gap-1 border-slate-500 bg-slate-700 border hover:bg-slate-600 text-white py-2 px-4 rounded-lg duration-200"
       >
         <MaterialIcon icon="arrow_outward" size={1.2}></MaterialIcon>Export
