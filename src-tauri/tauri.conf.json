@@ -12,10 +12,10 @@
   "app": {
     "windows": [
       {
-        "title": "Musa",
+        "title": "MU-DOST SA Online",
         "width": 800,
         "height": 600,
-        "decorations": false
+        "decorations": true
       }
     ],
     "security": {
