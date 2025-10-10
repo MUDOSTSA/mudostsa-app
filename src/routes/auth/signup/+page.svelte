@@ -110,7 +110,7 @@
     <div class="relative">
       <select
         id="position"
-        class="w-full opacity-70 border-2 my-2 border-white text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-900 rounded-full px-4 py-2 transition-colors appearance-none pr-10"
+        class="w-full opacity-70 border-2 my-2 border-white text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-900 rounded-full px-4 py-2 transition-colors appearance-none pr-10 backdrop-blur-webkit bg-black/30"
         bind:value={position}
         required
         style="-webkit-appearance: none; -moz-appearance: none; appearance: none;"
@@ -193,5 +193,26 @@
   select {
     /* Remove default arrow in Firefox */
     background-image: none !important;
+  }
+
+  select option {
+    background-color: rgba(15, 23, 42, 0.95); /* Dark background for options */
+    color: white;
+    padding: 8px 12px;
+    border: none;
+  }
+
+  select option:hover,
+  select option:focus {
+    background-color: rgba(30, 41, 59, 0.95); /* Slightly lighter on hover */
+  }
+
+  select option:checked {
+    background-color: rgba(
+      59,
+      130,
+      246,
+      0.8
+    ); /* Blue background for selected */
   }
 </style>

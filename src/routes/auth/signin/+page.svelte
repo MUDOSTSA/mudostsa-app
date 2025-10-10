@@ -1,6 +1,7 @@
 <script lang="ts">
   import { signInSchema } from "$lib/zod/auth_forms";
   import { signIn } from "$lib/supabase";
+  import { fetchUserProfile } from "$lib/stores/user";
   import { z } from "zod";
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
@@ -19,11 +20,13 @@
       return;
     }
     loading = true;
-    const { error: supaError } = await signIn(email, password);
+    const { data, error: supaError } = await signIn(email, password);
     loading = false;
     if (supaError) {
       error = supaError.message;
-    } else {
+    } else if (data?.user) {
+      // Explicitly fetch user profile to ensure dashboard displays properly
+      await fetchUserProfile(data.user.id);
       goto("/proper/");
     }
   }

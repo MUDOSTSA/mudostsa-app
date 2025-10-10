@@ -4,7 +4,7 @@
   import { readRows } from "$lib/supabase";
   import NavigationBar from "../../components/NavigationBar.svelte";
   import type { Link } from "$lib/types";
-  import { currentUser, signOutUser } from "$lib/stores/user";
+  import { currentUser } from "$lib/stores/user";
   import Title from "../../components/Title.svelte";
 
   let { children } = $props();
@@ -21,10 +21,6 @@
       loading = false;
     }
   });
-
-  const handleSignOut = async () => {
-    await signOutUser();
-  };
 </script>
 
 <svelte:head>
@@ -45,12 +41,6 @@
         <div class="text-blue-100">
           <Title className="text-xl">{page.data.title}</Title>
         </div>
-        <button
-          class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
-          onclick={handleSignOut}
-        >
-          Sign out
-        </button>
       </div>
       <div class="flex-1 overflow-auto">
         {@render children()}

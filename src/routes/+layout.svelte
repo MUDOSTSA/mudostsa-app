@@ -1,4 +1,5 @@
 <script lang="ts">
+  import "../global.css";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { initializeAuth, currentUser } from "../lib/stores/user";

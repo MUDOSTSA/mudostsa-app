@@ -80,6 +80,7 @@ export const initializeAuth = async () => {
 // Fetch user profile from profiles table
 export const fetchUserProfile = async (userId: string) => {
   try {
+    console.log("Fetching profile for user ID:", userId);
     isLoadingProfile.set(true);
     userError.set(null);
 
