@@ -10,6 +10,9 @@ import type { InventoryItem } from "./types";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
+console.log("Supabase URL:", supabaseUrl);
+console.log("Supabase Anon Key:", supabaseAnonKey);
+
 export const supabase: SupabaseClient = createClient(
   supabaseUrl,
   supabaseAnonKey,

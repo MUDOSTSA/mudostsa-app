@@ -52,7 +52,7 @@
           Sign out
         </button>
       </div>
-      <div class="flex-1 overflow-scroll">
+      <div class="flex-1 overflow-auto">
         {@render children()}
       </div>
     </div>
