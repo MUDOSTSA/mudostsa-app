@@ -26,7 +26,8 @@
 
 <th class="px-6 py-4 text-left font-medium"
   ><button onclick={toggleSort} class="flex items-center gap-2">
-    <span>{headerTitle}</span>{#if sorting.column == column}
+    <span class="whitespace-nowrap">{headerTitle}</span
+    >{#if sorting.column == column}
       {#if sorting.order == SortOrder.ascending}
         <span class="material-icons">arrow_upward</span>
       {:else}

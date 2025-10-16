@@ -1,8 +1,10 @@
 <script lang="ts">
   import Dialog from "./Dialog.svelte";
   import { logAttendanceSchema } from "$lib/zod/attendance_forms";
-  import { createRow } from "$lib/supabase";
+  import { createRow, readMember } from "$lib/supabase";
   import { currentUser } from "$lib/stores/user";
+  import type { Member } from "$lib/types";
+  import Throbber from "./Throbber.svelte";
 
   let {
     shown = $bindable(false),
@@ -33,11 +35,57 @@
   let errors = $state<Record<string, string>>({});
   let isSubmitting = $state(false);
 
+  // Member preview state
+  let memberPreview: Member | null = $state(null);
+  let isLoadingMember = $state(false);
+  let memberNotFound = $state(false);
+
+  async function fetchMemberDetails() {
+    if (!memberFormData.id.trim()) {
+      memberPreview = null;
+      memberNotFound = false;
+      return;
+    }
+
+    isLoadingMember = true;
+    memberNotFound = false;
+    errors.id = "";
+
+    try {
+      const result = await readMember(memberFormData.id.trim());
+
+      if (result.data) {
+        memberPreview = result.data;
+        memberNotFound = false;
+      } else {
+        memberPreview = null;
+        memberNotFound = true;
+      }
+    } catch (error) {
+      console.error("Error fetching member:", error);
+      memberPreview = null;
+      memberNotFound = true;
+    } finally {
+      isLoadingMember = false;
+    }
+  }
+
+  // Debounced member ID lookup
+  let memberIdTimeout: ReturnType<typeof setTimeout> | undefined;
+  function onMemberIdChange() {
+    clearTimeout(memberIdTimeout);
+    memberIdTimeout = setTimeout(fetchMemberDetails, 500);
+  }
+
   function resetForm() {
     memberFormData = { id: "" };
     nonMemberFormData = { name: "", program: "", year: 1, student_number: "" };
     errors = {};
     isSubmitting = false;
+    memberPreview = null;
+    isLoadingMember = false;
+    memberNotFound = false;
+    clearTimeout(memberIdTimeout);
   }
 
   async function handleSubmit(event: Event) {
@@ -57,6 +105,13 @@
     errors = {};
 
     try {
+      // For member mode, validate that member was found
+      if (attendeeType === "member" && !memberPreview) {
+        errors.id =
+          "Please enter a valid member ID and verify the member details";
+        return;
+      }
+
       // Prepare data based on attendee type
       const formData = {
         type: attendeeType,
@@ -190,6 +245,7 @@
           id="member-id"
           name="member-id"
           bind:value={memberFormData.id}
+          oninput={onMemberIdChange}
           disabled={isSubmitting}
           required
         />
@@ -197,6 +253,78 @@
           <span class="text-red-400 text-xs">{errors.id}</span>
         {/if}
       </label>
+
+      <!-- Member Preview -->
+      {#if isLoadingMember}
+        <div class="bg-slate-900/50 border border-slate-600 rounded-lg p-3">
+          <div class="flex items-center gap-2 text-white/60">
+            <Throbber></Throbber>
+            <span class="text-sm">Loading member details...</span>
+          </div>
+        </div>
+      {:else if memberNotFound && memberFormData.id.trim()}
+        <div class="bg-red-900/20 border border-red-500/50 rounded-lg p-3">
+          <div class="flex items-center gap-2 text-red-400">
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <span class="text-sm">Member not found</span>
+          </div>
+        </div>
+      {:else if memberPreview}
+        <div class="bg-green-900/20 border border-green-500/50 rounded-lg p-3">
+          <div class="flex items-center gap-2 mb-2 text-green-400">
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              ></path>
+            </svg>
+            <span class="text-sm font-medium">Member Found</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span class="text-white/60">Name:</span>
+              <span class="text-white ml-1">{memberPreview.name}</span>
+            </div>
+            <div>
+              <span class="text-white/60">Role:</span>
+              <span class="text-white ml-1">{memberPreview.role}</span>
+            </div>
+            <div>
+              <span class="text-white/60">Program:</span>
+              <span class="text-white ml-1">{memberPreview.program}</span>
+            </div>
+            <div>
+              <span class="text-white/60">Year:</span>
+              <span class="text-white ml-1">{memberPreview.year}</span>
+            </div>
+            <div class="col-span-2">
+              <span class="text-white/60">Committee:</span>
+              <span class="text-white ml-1"
+                >{memberPreview.committee ?? "Unspecified"}</span
+              >
+            </div>
+          </div>
+        </div>
+      {/if}
     {:else}
       <!-- Non-Member Form -->
       <label for="non-member-name" class="flex ml-[2px] flex-col gap-1">

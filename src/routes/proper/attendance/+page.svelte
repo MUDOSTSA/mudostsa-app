@@ -82,7 +82,7 @@
 <div class="p-4 w-full h-full overflow-hidden flex items-center justify-center">
   <div class="flex gap-2 items-center justify-start w-full h-full rounded-lg">
     <div
-      class="p-4 gap-2 flex flex-col rounded-md border bg-slate-800 w-1/5 border-slate-700 shadow white h-full"
+      class="p-4 box-sizing gap-2 flex flex-col rounded-md border bg-slate-800 w-1/5 border-slate-700 shadow white h-full"
     >
       <div class="flex gap-2 items-center">
         <Title>Sheets</Title>
@@ -108,10 +108,10 @@
       />
     </div>
     <div
-      class="w-4/5 p-4 gap-2 flex flex-col rounded-md border bg-slate-800 border-slate-700 shadow white h-full"
+      class="w-4/5 box-sizing p-4 gap-2 flex flex-col rounded-md border bg-slate-800 border-slate-700 shadow white h-full"
     >
       {#if selectedSheet}
-        <div class="flex items-center justify-between mb-2">
+        <div class="flex items-start justify-between mb-2">
           <div>
             <Title>{selectedSheet.name}</Title>
             <div class="text-xs text-white/50">

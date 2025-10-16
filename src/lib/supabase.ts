@@ -9,6 +9,7 @@ import type {
   AttendanceSheet,
   BasicAttendanceSheet,
   InventoryItem,
+  Member,
 } from "./types";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -116,6 +117,16 @@ export const readAttendanceSheet: (
     for_event:events (*)
     `
     )
+    .eq("id", id)
+    .single();
+};
+
+export const readMember: (
+  id: string
+) => Promise<PostgrestSingleResponse<Member>> = async (id) => {
+  return supabase
+    .from("members")
+    .select("*, profile:profiles (*)")
     .eq("id", id)
     .single();
 };
