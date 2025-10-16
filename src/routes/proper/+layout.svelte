@@ -1,10 +1,9 @@
 <script lang="ts">
   import { page } from "$app/state";
   import { onMount } from "svelte";
-  import { readRows } from "$lib/supabase";
+  import { readNavigationLinks } from "$lib/supabase";
   import NavigationBar from "../../components/NavigationBar.svelte";
   import type { Link } from "$lib/types";
-  import { currentUser } from "$lib/stores/user";
   import Title from "../../components/Title.svelte";
 
   let { children } = $props();
@@ -13,7 +12,7 @@
 
   onMount(async () => {
     try {
-      const { data: linksData } = await readRows("navigation");
+      const { data: linksData } = await readNavigationLinks();
       links = linksData || [];
     } catch (error) {
       console.error("Error loading data:", error);

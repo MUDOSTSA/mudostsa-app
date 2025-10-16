@@ -1,15 +1,10 @@
 <script lang="ts">
   import { SortOrder } from "$lib/enums";
-  import type {
-    InventoryItem,
-    InventoryItemWithSelectedQuantity,
-    SelectableInventoryItem,
-  } from "$lib/types";
-  import AddInventoryDialog from "./AddInventoryDialog.svelte";
-  import EditInventoryDialog from "./EditInventoryDialog.svelte";
-  import DeleteConfirmationDialog from "./DeleteConfirmationDialog.svelte";
+  import type { AttendanceRecordAdapter } from "$lib/types";
+  import LogAttendanceDialog from "./LogAttendanceDialog.svelte";
+  import DeleteAttendanceDialog from "./DeleteAttendanceDialog.svelte";
 
-  import InventoryRow from "./InventoryRow.svelte";
+  import AttendanceRow from "./AttendanceRow.svelte";
   import MaterialIcon from "./MaterialIcon.svelte";
   import Throbber from "./Throbber.svelte";
   import { downloadCsv } from "$lib/csv";
@@ -18,69 +13,47 @@
   let {
     items,
     loading = true,
+    attendanceSheetId,
     onRefresh,
   }: {
-    items: InventoryItem[];
+    items: AttendanceRecordAdapter[];
     loading: boolean;
+    attendanceSheetId?: number;
     onRefresh?: () => void | Promise<void>;
   } = $props();
-  let sorting: { column: keyof InventoryItem; order: SortOrder } = $state({
-    column: "updated_at",
-    order: SortOrder.descending,
-  });
+
+  let sorting: { column: keyof AttendanceRecordAdapter; order: SortOrder } =
+    $state({
+      column: "created_at",
+      order: SortOrder.descending,
+    });
   let searchFilter = $state("");
 
-  let sortedItems: InventoryItem[] = $derived(
+  let sortedItems: AttendanceRecordAdapter[] = $derived(
     items
       .slice()
       .sort((a, b) => {
-        //should display selected items on top then do the sort order
-
         const modifier = sorting.order === SortOrder.ascending ? 1 : -1;
         if (a[sorting.column] < b[sorting.column]) return -1 * modifier;
         if (a[sorting.column] > b[sorting.column]) return 1 * modifier;
         return 0;
       })
       .filter((item) =>
-        `${item.name} ${item.description} ${item.category} ${item.location} ${item.last_modified_by.display_name}`
+        `${item.name} ${item.id} ${item.role} ${item.committee} ${item.program} ${item.year}`
           .toLowerCase()
           .includes(searchFilter.toLowerCase())
       )
   );
-  let addDialogShown = $state(false);
-  let editDialogShown = $state(false);
-  let deleteDialogShown = $state(false);
-  let itemToEdit: InventoryItem | null = $state(null);
-  let selectedItems: { [key: string]: InventoryItemWithSelectedQuantity } =
-    $state({});
 
-  function handleRowClick(item: InventoryItemWithSelectedQuantity) {
+  let logDialogShown = $state(false);
+  let deleteDialogShown = $state(false);
+  let selectedItems: { [key: string]: AttendanceRecordAdapter } = $state({});
+
+  function handleRowClick(item: AttendanceRecordAdapter) {
     if (selectedItems[item.id]) {
       delete selectedItems[item.id];
     } else {
       selectedItems[item.id] = item;
-    }
-  }
-  function handleQuantityChanged(
-    item: InventoryItemWithSelectedQuantity,
-    quantity: number
-  ) {
-    if (selectedItems[item.id]) {
-      selectedItems[item.id].selectedQuantity = quantity;
-    }
-  }
-
-  function handleEditClick() {
-    const selectedItemIds = Object.keys(selectedItems);
-    if (selectedItemIds.length === 1) {
-      const selectedId = selectedItemIds[0];
-      const selectedItem = items.find(
-        (item) => item.id.toString() === selectedId
-      );
-      if (selectedItem) {
-        itemToEdit = selectedItem;
-        editDialogShown = true;
-      }
     }
   }
 
@@ -91,38 +64,38 @@
   }
 
   function handleSuccess() {
-    selectedItems = {}; // Clear selection after successful delete
+    selectedItems = {}; // Clear selection after successful operation
     onRefresh?.(); // Refresh the data
   }
+
   function exportToCSV() {
     let date = new Date();
     if (selectedItems && Object.keys(selectedItems).length > 0) {
       const itemsToExport = Object.values(selectedItems);
       downloadCsv(
         itemsToExport,
-        `generated_selected_inventory_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.csv`
+        `attendance_records_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.csv`
       );
       return;
     }
     downloadCsv(
       items,
-      `generated_inventory_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.csv`
+      `attendance_records_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.csv`
     );
   }
 </script>
 
-<AddInventoryDialog bind:shown={addDialogShown} onSuccess={handleSuccess}
-></AddInventoryDialog>
-<EditInventoryDialog
-  bind:shown={editDialogShown}
-  bind:item={itemToEdit}
+<LogAttendanceDialog
+  bind:shown={logDialogShown}
+  {attendanceSheetId}
   onSuccess={handleSuccess}
-></EditInventoryDialog>
-<DeleteConfirmationDialog
+/>
+<DeleteAttendanceDialog
   bind:shown={deleteDialogShown}
   {selectedItems}
   onSuccess={handleSuccess}
-></DeleteConfirmationDialog>
+/>
+
 <div
   class="w-full relative overflow-hidden bg-slate-800 border-slate-700 border rounded-lg h-full flex flex-col items-center justify-start gap-2 py-2"
 >
@@ -134,7 +107,7 @@
       </div>
     {:else}
       <div class="flex items-center gap-2">
-        <span>Showing {sortedItems.length} items</span>
+        <span>Showing {sortedItems.length} records</span>
         <button
           onclick={() => onRefresh?.()}
           class="flex items-center gap-1 px-2 text-xs hover:bg-slate-600 text-white/80 hover:text-white rounded-full transition-colors"
@@ -154,22 +127,17 @@
     />
     <div class="flex items-center justify-center gap-2">
       <button
-        onclick={() => (addDialogShown = true)}
+        onclick={() => (logDialogShown = true)}
         class="flex items-center justify-center gap-1 bg-blue-700 border-blue-500 border hover:bg-blue-600 text-white py-2 px-4 rounded-lg duration-200"
       >
         <MaterialIcon icon="add" size={1.2}></MaterialIcon>
-        Add
+        Log
       </button>
       <button
         onclick={exportToCSV}
         class="flex items-center justify-center gap-1 border-slate-500 bg-slate-700 border hover:bg-slate-600 text-white py-2 px-4 rounded-lg duration-200"
       >
         <MaterialIcon icon="arrow_outward" size={1.2}></MaterialIcon>Export
-      </button>
-      <button
-        class="flex items-center justify-center gap-1 border-slate-500 bg-slate-700 border hover:bg-slate-600 text-white py-2 px-4 rounded-lg duration-200"
-      >
-        <MaterialIcon icon="code" size={1.2}></MaterialIcon>Console
       </button>
     </div>
   </div>
@@ -187,22 +155,10 @@
         <span class="text-white/80 pr-4"
           >{Object.keys(selectedItems).length} selected</span
         >
-        {#if Object.keys(selectedItems).length === 1}
-          <button
-            onclick={handleEditClick}
-            title="Edit item"
-            class="h-8 flex items-center justify-center rounded-full text-white/80 w-10 hover:bg-white/10"
-            ><MaterialIcon icon="edit" size={1.3}></MaterialIcon></button
-          >
-        {/if}
-        <button
-          title="Request item(s)"
-          class="h-8 flex items-center justify-center rounded-full text-white/80 w-10 hover:bg-white/10"
-          ><MaterialIcon icon="request_page" size={1.3}></MaterialIcon></button
-        >
+
         <button
           onclick={handleDeleteClick}
-          title="Delete item(s)"
+          title="Delete record(s)"
           class="h-8 flex items-center justify-center rounded-full text-white/80 w-10 hover:bg-white/10"
           ><MaterialIcon icon="delete" size={1.3} outlined={true}
           ></MaterialIcon></button
@@ -214,33 +170,37 @@
     <table class="w-full border-collapse min-w-260 text-white rounded-lg">
       <thead class="bg-slate-800 sticky top-0 z-1">
         <tr>
-          <th></th>
-          <TableHeader headerTitle="ID" column="id" {sorting}></TableHeader>
-          <TableHeader headerTitle="Item" column="name" {sorting}></TableHeader>
-          <TableHeader headerTitle="Quantity" column="quantity" {sorting}
+          <TableHeader headerTitle="Record ID" column="id" {sorting}
           ></TableHeader>
-          <TableHeader headerTitle="Category" column="category" {sorting}
+          <TableHeader headerTitle="Member Name" column="name" {sorting}
           ></TableHeader>
-          <TableHeader headerTitle="Location" column="location" {sorting}
+          <TableHeader headerTitle="Member ID" column="student_number" {sorting}
           ></TableHeader>
-          <TableHeader headerTitle="Modified at" column="updated_at" {sorting}
+          <TableHeader headerTitle="Program" column="program" {sorting}
+          ></TableHeader>
+          <TableHeader headerTitle="Year" column="year" {sorting}></TableHeader>
+          <TableHeader headerTitle="Committee" column="committee" {sorting}
+          ></TableHeader>
+          <TableHeader headerTitle="Role" column="role" {sorting}></TableHeader>
+          <TableHeader headerTitle="Logged At" column="created_at" {sorting}
           ></TableHeader>
         </tr>
       </thead>
       <tbody>
         {#each sortedItems as row}
-          <InventoryRow
+          <AttendanceRow
             selected={selectedItems[row.id] ? true : false}
             selectable
             item={row}
             onclick={handleRowClick}
-            onselectedquantitychanged={handleQuantityChanged}
           />
         {/each}
       </tbody>
     </table>
     {#if sortedItems.length === 0}
-      <div class="p-4 text-center text-gray-500">No items found</div>
+      <div class="p-4 text-center text-gray-500">
+        No attendance records found
+      </div>
     {/if}
   </div>
 </div>

@@ -5,7 +5,11 @@ import {
   type Session,
   type PostgrestSingleResponse,
 } from "@supabase/supabase-js";
-import type { InventoryItem } from "./types";
+import type {
+  AttendanceSheet,
+  BasicAttendanceSheet,
+  InventoryItem,
+} from "./types";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
@@ -65,6 +69,13 @@ export const readRows = async (
   return supabase.from(table).select("*").match(query);
 };
 
+export const readNavigationLinks = async () => {
+  return supabase
+    .from("navigation")
+    .select("*")
+    .order("position", { ascending: true });
+};
+
 export const readInventory: () => Promise<
   PostgrestSingleResponse<InventoryItem[]>
 > = async () => {
@@ -76,6 +87,37 @@ export const readInventory: () => Promise<
     added_by (*)`
     )
     .order("updated_at", { ascending: false });
+};
+export const readAttendanceSheets: () => Promise<
+  PostgrestSingleResponse<BasicAttendanceSheet[]>
+> = async () => {
+  const result = await supabase
+    .from("attendance_basic_view")
+    .select("*")
+    .order("created_at", { ascending: false });
+  console.log(
+    "readAttendanceSheets data:",
+    result.data,
+    "error:",
+    result.error
+  );
+  return result;
+};
+
+export const readAttendanceSheet: (
+  id: number
+) => Promise<PostgrestSingleResponse<AttendanceSheet>> = async (id) => {
+  return supabase
+    .from("attendance_sheets")
+    .select(
+      `*,
+    member_records:attendance_record (*, member:members (*)),
+    non_member_records:non_member_attendance_record (*),
+    for_event:events (*)
+    `
+    )
+    .eq("id", id)
+    .single();
 };
 
 export const updateRow = async (

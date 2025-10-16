@@ -30,6 +30,14 @@ export type InventoryItem = {
   category: string;
   updated_at: Date;
 };
+export type RoomTambayanSchedule = {
+  id: number;
+  created_at: Date;
+  room: string;
+  campus: string;
+  time_start: Date;
+  time_end: Date;
+};
 
 export type InventoryItemWithSelectedQuantity = {
   id: number;
@@ -55,3 +63,93 @@ export type MembershipInfo = {
   name: string;
   active: boolean;
 };
+export type BasicAttendanceSheet = {
+  id: number;
+  created_at: Date;
+  name: string;
+  event_title: string | null | undefined;
+  count: number;
+  locked: boolean;
+};
+export type Event = {
+  id: number;
+  created_at: Date;
+  event_title: string;
+  event_head: Profile;
+  event_description: string;
+};
+export type AttendanceSheet = {
+  id: number;
+  created_at: Date;
+  name: string;
+  for_event?: Event | null | undefined;
+  member_records: MemberAttendanceRecord[];
+  non_member_records: NonMemberAttendanceRecord[];
+  locked: boolean;
+};
+export type MemberAttendanceRecord = {
+  id: number;
+  created_at: Date;
+  member: Member;
+};
+export type NonMemberAttendanceRecord = {
+  id: number;
+  created_at: Date;
+  name: string;
+  program: string;
+  year: number;
+  student_number: string;
+};
+export type Member = {
+  id: string;
+  profile?: Profile | null | undefined;
+  role: string;
+  name: string;
+  program: string;
+  year: number;
+  committee: string;
+};
+
+export type AttendanceRecordAdapter = {
+  id: string;
+  created_at: Date;
+  name: string;
+  program: string;
+  year: number;
+  committee: string;
+  role: string;
+  student_number: string;
+  is_member: boolean;
+};
+
+export function normalizeAttendanceRecord(
+  record: MemberAttendanceRecord | NonMemberAttendanceRecord
+): AttendanceRecordAdapter {
+  if ("member" in record) {
+    // It's a MemberAttendanceRecord
+    return {
+      id: `m-${record.id}`,
+      created_at: record.created_at,
+      name: record.member.name,
+      program: record.member.program,
+      year: record.member.year,
+      committee: record.member.committee,
+      role: record.member.role,
+      student_number: record.member.id,
+      is_member: true,
+    };
+  } else {
+    // It's a NonMemberAttendanceRecord
+    return {
+      id: `nm-${record.id}`,
+      created_at: record.created_at,
+      name: record.name,
+      program: record.program,
+      year: record.year,
+      committee: "",
+      role: "",
+      student_number: record.student_number,
+      is_member: false,
+    };
+  }
+}

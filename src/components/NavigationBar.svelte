@@ -38,7 +38,7 @@
         {#if !collapsed || tempExpand}
           <span
             transition:animate={{ duration: 200 }}
-            class="text-blue-100 text-sm">{link.name}</span
+            class="text-blue-100 text-sm whitespace-nowrap">{link.name}</span
           >
         {/if}
       </a>

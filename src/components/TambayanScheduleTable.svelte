@@ -1,36 +1,35 @@
 <script lang="ts">
   import { SortOrder } from "$lib/enums";
-  import type {
-    InventoryItem,
-    InventoryItemWithSelectedQuantity,
-    SelectableInventoryItem,
-  } from "$lib/types";
-  import AddInventoryDialog from "./AddInventoryDialog.svelte";
-  import EditInventoryDialog from "./EditInventoryDialog.svelte";
-  import DeleteConfirmationDialog from "./DeleteConfirmationDialog.svelte";
+  import type { RoomTambayanSchedule } from "$lib/types";
+  import Dialog from "./Dialog.svelte";
 
-  import InventoryRow from "./InventoryRow.svelte";
   import MaterialIcon from "./MaterialIcon.svelte";
   import Throbber from "./Throbber.svelte";
   import { downloadCsv } from "$lib/csv";
+  import TambayanScheduleRow from "./TambayanScheduleRow.svelte";
+
   import TableHeader from "./TableHeader.svelte";
+  import AddTambayanScheduleDialog from "./AddTambayanScheduleDialog.svelte";
+  import EditTambayanScheduleDialog from "./EditTambayanScheduleDialog.svelte";
+  import DeleteTambayanScheduleDialog from "./DeleteTambayanScheduleDialog.svelte";
 
   let {
     items,
     loading = true,
     onRefresh,
   }: {
-    items: InventoryItem[];
+    items: RoomTambayanSchedule[];
     loading: boolean;
     onRefresh?: () => void | Promise<void>;
   } = $props();
-  let sorting: { column: keyof InventoryItem; order: SortOrder } = $state({
-    column: "updated_at",
-    order: SortOrder.descending,
-  });
+  let sorting: { column: keyof RoomTambayanSchedule; order: SortOrder } =
+    $state({
+      column: "created_at",
+      order: SortOrder.descending,
+    });
   let searchFilter = $state("");
 
-  let sortedItems: InventoryItem[] = $derived(
+  let sortedItems: RoomTambayanSchedule[] = $derived(
     items
       .slice()
       .sort((a, b) => {
@@ -42,7 +41,7 @@
         return 0;
       })
       .filter((item) =>
-        `${item.name} ${item.description} ${item.category} ${item.location} ${item.last_modified_by.display_name}`
+        `${item.room} ${item.campus} ${item.time_start} ${item.time_end}`
           .toLowerCase()
           .includes(searchFilter.toLowerCase())
       )
@@ -50,23 +49,14 @@
   let addDialogShown = $state(false);
   let editDialogShown = $state(false);
   let deleteDialogShown = $state(false);
-  let itemToEdit: InventoryItem | null = $state(null);
-  let selectedItems: { [key: string]: InventoryItemWithSelectedQuantity } =
-    $state({});
+  let itemToEdit: RoomTambayanSchedule | null = $state(null);
+  let selectedItems: { [key: string]: RoomTambayanSchedule } = $state({});
 
-  function handleRowClick(item: InventoryItemWithSelectedQuantity) {
+  function handleRowClick(item: RoomTambayanSchedule) {
     if (selectedItems[item.id]) {
       delete selectedItems[item.id];
     } else {
       selectedItems[item.id] = item;
-    }
-  }
-  function handleQuantityChanged(
-    item: InventoryItemWithSelectedQuantity,
-    quantity: number
-  ) {
-    if (selectedItems[item.id]) {
-      selectedItems[item.id].selectedQuantity = quantity;
     }
   }
 
@@ -100,18 +90,18 @@
       const itemsToExport = Object.values(selectedItems);
       downloadCsv(
         itemsToExport,
-        `generated_selected_inventory_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.csv`
+        `room_tambayan_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.csv`
       );
       return;
     }
     downloadCsv(
       items,
-      `generated_inventory_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.csv`
+      `room_tambayan_schedule_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.csv`
     );
   }
 </script>
 
-<AddInventoryDialog bind:shown={addDialogShown} onSuccess={handleSuccess}
+<!--<AddInventoryDialog bind:shown={addDialogShown} onSuccess={handleSuccess}
 ></AddInventoryDialog>
 <EditInventoryDialog
   bind:shown={editDialogShown}
@@ -122,7 +112,22 @@
   bind:shown={deleteDialogShown}
   {selectedItems}
   onSuccess={handleSuccess}
-></DeleteConfirmationDialog>
+></DeleteConfirmationDialog>-->
+
+<AddTambayanScheduleDialog
+  bind:shown={addDialogShown}
+  onSuccess={handleSuccess}
+/>
+<EditTambayanScheduleDialog
+  bind:shown={editDialogShown}
+  bind:item={itemToEdit}
+  onSuccess={handleSuccess}
+/>
+<DeleteTambayanScheduleDialog
+  bind:shown={deleteDialogShown}
+  {selectedItems}
+  onSuccess={handleSuccess}
+/>
 <div
   class="w-full relative overflow-hidden bg-slate-800 border-slate-700 border rounded-lg h-full flex flex-col items-center justify-start gap-2 py-2"
 >
@@ -195,11 +200,7 @@
             ><MaterialIcon icon="edit" size={1.3}></MaterialIcon></button
           >
         {/if}
-        <button
-          title="Request item(s)"
-          class="h-8 flex items-center justify-center rounded-full text-white/80 w-10 hover:bg-white/10"
-          ><MaterialIcon icon="request_page" size={1.3}></MaterialIcon></button
-        >
+
         <button
           onclick={handleDeleteClick}
           title="Delete item(s)"
@@ -214,27 +215,25 @@
     <table class="w-full border-collapse min-w-260 text-white rounded-lg">
       <thead class="bg-slate-800 sticky top-0 z-1">
         <tr>
-          <th></th>
           <TableHeader headerTitle="ID" column="id" {sorting}></TableHeader>
-          <TableHeader headerTitle="Item" column="name" {sorting}></TableHeader>
-          <TableHeader headerTitle="Quantity" column="quantity" {sorting}
+          <TableHeader headerTitle="Room" column="room" {sorting}></TableHeader>
+          <TableHeader headerTitle="Campus" column="campus" {sorting}
           ></TableHeader>
-          <TableHeader headerTitle="Category" column="category" {sorting}
+          <TableHeader headerTitle="Time Start" column="time_start" {sorting}
           ></TableHeader>
-          <TableHeader headerTitle="Location" column="location" {sorting}
+          <TableHeader headerTitle="Time End" column="time_end" {sorting}
           ></TableHeader>
-          <TableHeader headerTitle="Modified at" column="updated_at" {sorting}
+          <TableHeader headerTitle="Created at" column="created_at" {sorting}
           ></TableHeader>
         </tr>
       </thead>
       <tbody>
         {#each sortedItems as row}
-          <InventoryRow
+          <TambayanScheduleRow
             selected={selectedItems[row.id] ? true : false}
             selectable
             item={row}
             onclick={handleRowClick}
-            onselectedquantitychanged={handleQuantityChanged}
           />
         {/each}
       </tbody>
