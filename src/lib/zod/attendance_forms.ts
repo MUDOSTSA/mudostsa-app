@@ -1,5 +1,23 @@
 import { z } from "zod";
 
+// Schema for creating new attendance sheet
+export const createAttendanceSheetSchema = z.object({
+  name: z.string().min(1, "Sheet name is required").trim(),
+  event_id: z.number().int().positive().optional(),
+  locked: z.boolean(),
+  private: z.boolean(),
+  code: z.string().optional(),
+});
+
+// Schema for editing attendance sheet
+export const editAttendanceSheetSchema = z.object({
+  name: z.string().min(1, "Sheet name is required").trim(),
+  event_id: z.number().int().positive().optional(),
+  locked: z.boolean(),
+  private: z.boolean(),
+  code: z.string().optional(),
+});
+
 // Schema for logging member attendance
 export const logMemberAttendanceSchema = z.object({
   id: z.string().min(1, "Member ID is required").trim(),
@@ -30,6 +48,8 @@ export const logAttendanceSchema = z.discriminatedUnion("type", [
 ]);
 
 // Type exports for use in components
+export type CreateAttendanceSheet = z.infer<typeof createAttendanceSheetSchema>;
+export type EditAttendanceSheet = z.infer<typeof editAttendanceSheetSchema>;
 export type LogMemberAttendance = z.infer<typeof logMemberAttendanceSchema>;
 export type LogNonMemberAttendance = z.infer<
   typeof logNonMemberAttendanceSchema

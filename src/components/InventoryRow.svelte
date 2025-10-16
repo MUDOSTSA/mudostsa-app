@@ -118,7 +118,7 @@
         onclick?.({ ...item, selectedQuantity });
       }
     }}
-    class=" px-6 py-8">{item.id}</td
+    class=" px-6 py-8 font-mono">{item.id}</td
   >
   <td
     onclick={() => {

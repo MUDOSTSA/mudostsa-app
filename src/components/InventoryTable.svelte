@@ -166,11 +166,6 @@
       >
         <MaterialIcon icon="arrow_outward" size={1.2}></MaterialIcon>Export
       </button>
-      <button
-        class="flex items-center justify-center gap-1 border-slate-500 bg-slate-700 border hover:bg-slate-600 text-white py-2 px-4 rounded-lg duration-200"
-      >
-        <MaterialIcon icon="code" size={1.2}></MaterialIcon>Console
-      </button>
     </div>
   </div>
   {#if selectedItems && Object.keys(selectedItems).length > 0}

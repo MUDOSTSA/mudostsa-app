@@ -45,7 +45,7 @@
         onclick?.({ ...item });
       }
     }}
-    class=" px-6 py-8">{item.id}</td
+    class=" px-6 py-8 font-mono">{item.id}</td
   >
   <td
     onclick={() => {
@@ -56,7 +56,7 @@
     class="px-6 py-8 max-w-64"
   >
     <div class="flex flex-col">
-      <span class="font-medium">{item.room}</span>
+      <span class="font-bold">{item.room}</span>
     </div>
   </td>
 
@@ -66,7 +66,14 @@
         onclick?.({ ...item });
       }
     }}
-    class="px-6 py-8">{item.campus}</td
+    class="px-6 py-8"
+    ><span
+      class="capitalize {item.campus.toLowerCase() == 'intramuros'
+        ? 'bg-red-800 border-red-600'
+        : 'bg-green-800 border-green-600'} px-2 py-1 rounded-md border"
+    >
+      {item.campus}
+    </span></td
   >
   <td
     onclick={() => {

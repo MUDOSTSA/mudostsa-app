@@ -32,7 +32,7 @@
           const memberId = id.replace("m-", "");
           promises.push(deleteRow("attendance_record", parseInt(memberId)));
         } else {
-          const nonMemberId = id.replace("nm-", "");
+          const nonMemberId = id.replace("g-", "");
           promises.push(
             deleteRow("non_member_attendance_record", parseInt(nonMemberId))
           );

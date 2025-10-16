@@ -31,14 +31,14 @@
   role={selectable ? "button" : undefined}
   tabindex={selectable ? 0 : undefined}
 >
-  <td class="px-4 py-3 text-sm text-white font-mono">{item.id}</td>
-  <td class="px-4 py-3 text-sm text-white">{item.name}</td>
-  <td class="px-4 py-3 text-sm text-white">{item.student_number}</td>
-  <td class="px-4 py-3 text-sm text-white">{item.program}</td>
-  <td class="px-4 py-3 text-sm text-white">{item.year}</td>
-  <td class="px-4 py-3 text-sm text-white">{item.committee}</td>
-  <td class="px-4 py-3 text-sm text-white">{item.role}</td>
-  <td class="px-4 py-3 text-sm text-white/60">
+  <td class="px-6 min-w-15 py-2 text-sm text-white font-mono">{item.id}</td>
+  <td class="px-6 py-3 text-sm text-white">{item.name}</td>
+  <td class="px-6 py-3 text-sm text-white">{item.student_number}</td>
+  <td class="px-6 py-3 text-sm text-white">{item.program}</td>
+  <td class="px-6 py-3 text-sm text-white">{item.year}</td>
+  <td class="px-6 py-3 text-sm text-white">{item.committee}</td>
+  <td class="px-6 py-3 text-sm text-white">{item.role}</td>
+  <td class="px-6 py-3 text-sm text-white/60">
     {new Date(item.created_at).toLocaleDateString()}
     {new Date(item.created_at).toLocaleTimeString()}
   </td>

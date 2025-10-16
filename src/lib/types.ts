@@ -70,6 +70,7 @@ export type BasicAttendanceSheet = {
   event_title: string | null | undefined;
   count: number;
   locked: boolean;
+  private: boolean;
 };
 export type Event = {
   id: number;
@@ -86,6 +87,8 @@ export type AttendanceSheet = {
   member_records: MemberAttendanceRecord[];
   non_member_records: NonMemberAttendanceRecord[];
   locked: boolean;
+  private: boolean;
+  code: string | null;
 };
 export type MemberAttendanceRecord = {
   id: number;
@@ -141,7 +144,7 @@ export function normalizeAttendanceRecord(
   } else {
     // It's a NonMemberAttendanceRecord
     return {
-      id: `nm-${record.id}`,
+      id: `g-${record.id}`,
       created_at: record.created_at,
       name: record.name,
       program: record.program,

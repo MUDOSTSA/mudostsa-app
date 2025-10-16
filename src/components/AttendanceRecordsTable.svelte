@@ -14,12 +14,18 @@
     items,
     loading = true,
     attendanceSheetId,
+    locked = false,
     onRefresh,
+    onDeleteSheet,
+    onEditSheet,
   }: {
     items: AttendanceRecordAdapter[];
     loading: boolean;
     attendanceSheetId?: number;
+    locked?: boolean;
     onRefresh?: () => void | Promise<void>;
+    onDeleteSheet?: () => void | Promise<void>;
+    onEditSheet?: () => void | Promise<void>;
   } = $props();
 
   let sorting: { column: keyof AttendanceRecordAdapter; order: SortOrder } =
@@ -74,13 +80,13 @@
       const itemsToExport = Object.values(selectedItems);
       downloadCsv(
         itemsToExport,
-        `attendance_records_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.csv`
+        `attendance_records_selected_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.csv`
       );
       return;
     }
     downloadCsv(
-      items,
-      `attendance_records_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.csv`
+      sortedItems,
+      `attendance_records_filtered_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.csv`
     );
   }
 </script>
@@ -97,7 +103,7 @@
 />
 
 <div
-  class="w-full relative overflow-hidden bg-slate-800 border-slate-700 border rounded-lg h-full flex flex-col items-center justify-start gap-2 py-2"
+  class="w-full relative flex-1 overflow-hidden bg-slate-800 border-slate-700 border rounded-lg h-full flex flex-col items-center justify-start gap-2 py-2"
 >
   <span class="text-white/30 text-sm"
     >{#if loading}
@@ -128,7 +134,9 @@
     <div class="flex items-center justify-center gap-2">
       <button
         onclick={() => (logDialogShown = true)}
-        class="flex items-center justify-center gap-1 bg-blue-700 border-blue-500 border hover:bg-blue-600 text-white py-2 px-4 rounded-lg duration-200"
+        disabled={locked}
+        class="flex items-center justify-center gap-1 bg-blue-700 border-blue-500 border hover:bg-blue-600 text-white py-2 px-4 rounded-lg duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-700"
+        title={locked ? "Sheet is locked" : "Log attendance"}
       >
         <MaterialIcon icon="add" size={1.2}></MaterialIcon>
         Log
@@ -139,6 +147,26 @@
       >
         <MaterialIcon icon="arrow_outward" size={1.2}></MaterialIcon>Export
       </button>
+      {#if onEditSheet}
+        <button
+          onclick={() => onEditSheet?.()}
+          class="flex items-center whitespace-nowrap justify-center gap-1 bg-slate-700 border-slate-500 border hover:bg-slate-600 text-white py-2 px-4 rounded-lg duration-200"
+          title="Edit this attendance sheet"
+        >
+          <MaterialIcon icon="edit" size={1.2}></MaterialIcon>
+          Edit
+        </button>
+      {/if}
+      {#if onDeleteSheet}
+        <button
+          onclick={() => onDeleteSheet?.()}
+          class="flex items-center whitespace-nowrap justify-center gap-1 bg-red-800 border-red-600 border hover:bg-red-700 text-white py-2 px-4 rounded-lg duration-200"
+          title="Delete this attendance sheet"
+        >
+          <MaterialIcon icon="delete" size={1.2} outlined={true}></MaterialIcon>
+          Delete Sheet
+        </button>
+      {/if}
     </div>
   </div>
   {#if selectedItems && Object.keys(selectedItems).length > 0}
@@ -158,23 +186,26 @@
 
         <button
           onclick={handleDeleteClick}
-          title="Delete record(s)"
-          class="h-8 flex items-center justify-center rounded-full text-white/80 w-10 hover:bg-white/10"
+          disabled={locked}
+          title={locked ? "Sheet is locked" : "Delete record(s)"}
+          class="h-8 flex items-center justify-center rounded-full text-white/80 w-10 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
           ><MaterialIcon icon="delete" size={1.3} outlined={true}
           ></MaterialIcon></button
         >
       </div>
     </div>
   {/if}
-  <div class="h-full relative w-full overflow-scroll">
+  <div class="flex-1 relative w-full overflow-scroll">
     <table class="w-full border-collapse min-w-260 text-white rounded-lg">
       <thead class="bg-slate-800 sticky top-0 z-1">
         <tr>
           <TableHeader headerTitle="Record ID" column="id" {sorting}
           ></TableHeader>
-          <TableHeader headerTitle="Member Name" column="name" {sorting}
-          ></TableHeader>
-          <TableHeader headerTitle="Member ID" column="student_number" {sorting}
+          <TableHeader headerTitle="Name" column="name" {sorting}></TableHeader>
+          <TableHeader
+            headerTitle="Student Number"
+            column="student_number"
+            {sorting}
           ></TableHeader>
           <TableHeader headerTitle="Program" column="program" {sorting}
           ></TableHeader>
