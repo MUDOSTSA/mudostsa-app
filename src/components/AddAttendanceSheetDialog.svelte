@@ -197,7 +197,7 @@
 
     <div>
       <label for="code" class="block text-sm font-medium text-white mb-2">
-        Access Code (Optional)
+        Access Code *
       </label>
       <input
         type="text"

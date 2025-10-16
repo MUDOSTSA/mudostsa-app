@@ -105,10 +105,22 @@
     errors = {};
 
     try {
-      // For member mode, validate that member was found
-      if (attendeeType === "member" && !memberPreview) {
-        errors.id =
-          "Please enter a valid member ID and verify the member details";
+      // For member mode, wait for ongoing fetch to complete
+      if (attendeeType === "member" && isLoadingMember) {
+        // Wait for the current fetch to complete
+        await new Promise((resolve) => {
+          const checkInterval = setInterval(() => {
+            if (!isLoadingMember) {
+              clearInterval(checkInterval);
+              resolve(true);
+            }
+          }, 100);
+        });
+      }
+
+      // For member mode, validate that member exists
+      if (attendeeType === "member" && memberNotFound) {
+        errors.id = "Member not found. Please check the member ID";
         return;
       }
 
