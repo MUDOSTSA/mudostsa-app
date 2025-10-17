@@ -93,7 +93,9 @@
         class="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden"
       >
         <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-blue-800 p-6 sm:p-8">
+        <div
+          class="bg-gradient-to-r bg-[url(/crystal_pattern.png)] bg-blue-950 border-b border-slate-700 p-6 sm:p-8"
+        >
           <div class="flex items-start justify-between mb-4">
             <div class="flex-1">
               <div class="flex items-center gap-2 mb-2">
@@ -104,14 +106,11 @@
               <Title className="text-2xl sm:text-3xl">{event.event_title}</Title
               >
             </div>
-            <div class="bg-blue-500/30 p-3 rounded-lg">
-              <MaterialIcon icon="event" size={2} />
-            </div>
           </div>
 
           <!-- Event Dates -->
           <div
-            class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-blue-700/30 rounded-lg p-4"
+            class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-blue-700/30 border border-blue-600 backdrop-blur-2xl rounded-lg p-4"
           >
             <div>
               <div class="flex items-center gap-2 text-blue-200 text-xs mb-1">
