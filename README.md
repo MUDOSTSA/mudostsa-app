@@ -3,7 +3,7 @@
 ![Version](https://img.shields.io/badge/version-0.2.1-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-**MU-DOST SA Online** is a comprehensive management system for the Mapúa University Department of Science and Technology Student Association (MU-DOST SA). This desktop application streamlines organization operations including event management, attendance tracking, inventory management, and member roster maintenance.
+**MU-DOST SA Online** is a comprehensive management system for the Mapúa University Department of Science and Technology Scholars' Association (MU-DOST SA). This desktop application streamlines organization operations including event management, attendance tracking, inventory management, and member roster maintenance.
 
 ## Features
 
