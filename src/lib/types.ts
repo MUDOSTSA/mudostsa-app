@@ -37,6 +37,19 @@ export type RoomTambayanSchedule = {
   campus: string;
   time_start: Date;
   time_end: Date;
+  attendance_sheet?: AttendanceSheet | null;
+};
+
+export type RoomTambayanScheduleNormalized = {
+  id: number;
+  created_at: Date;
+  room: string;
+  campus: string;
+  time_start: Date;
+  time_end: Date;
+  attendance_sheet_id: number | null;
+  attendance_sheet_code: string | null;
+  has_attendance_sheet: boolean;
 };
 
 export type InventoryItemWithSelectedQuantity = {
@@ -76,8 +89,10 @@ export type Event = {
   id: number;
   created_at: Date;
   event_title: string;
-  event_head: Profile;
+  event_heads: string[] | null;
   event_description: string;
+  event_start: Date;
+  event_end: Date;
 };
 export type AttendanceSheet = {
   id: number;
@@ -155,4 +170,20 @@ export function normalizeAttendanceRecord(
       is_member: false,
     };
   }
+}
+
+export function normalizeRoomTambayanSchedule(
+  schedule: RoomTambayanSchedule
+): RoomTambayanScheduleNormalized {
+  return {
+    id: schedule.id,
+    created_at: schedule.created_at,
+    room: schedule.room,
+    campus: schedule.campus,
+    time_start: schedule.time_start,
+    time_end: schedule.time_end,
+    attendance_sheet_id: schedule.attendance_sheet?.id || null,
+    attendance_sheet_code: schedule.attendance_sheet?.code || null,
+    has_attendance_sheet: !!schedule.attendance_sheet,
+  };
 }

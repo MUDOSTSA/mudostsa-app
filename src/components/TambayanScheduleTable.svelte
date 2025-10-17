@@ -1,6 +1,11 @@
 <script lang="ts">
   import { SortOrder } from "$lib/enums";
-  import type { RoomTambayanSchedule } from "$lib/types";
+  import type {
+    RoomTambayanSchedule,
+    RoomTambayanScheduleNormalized,
+  } from "$lib/types";
+  import { normalizeRoomTambayanSchedule } from "$lib/types";
+  import { goto } from "$app/navigation";
   import Dialog from "./Dialog.svelte";
 
   import MaterialIcon from "./MaterialIcon.svelte";
@@ -12,6 +17,7 @@
   import AddTambayanScheduleDialog from "./AddTambayanScheduleDialog.svelte";
   import EditTambayanScheduleDialog from "./EditTambayanScheduleDialog.svelte";
   import DeleteTambayanScheduleDialog from "./DeleteTambayanScheduleDialog.svelte";
+  import LinkAttendanceSheetDialog from "./LinkAttendanceSheetDialog.svelte";
 
   let {
     items,
@@ -22,26 +28,40 @@
     loading: boolean;
     onRefresh?: () => void | Promise<void>;
   } = $props();
-  let sorting: { column: keyof RoomTambayanSchedule; order: SortOrder } =
-    $state({
-      column: "created_at",
-      order: SortOrder.descending,
-    });
+  let sorting: {
+    column: keyof RoomTambayanScheduleNormalized;
+    order: SortOrder;
+  } = $state({
+    column: "created_at",
+    order: SortOrder.descending,
+  });
   let searchFilter = $state("");
 
-  let sortedItems: RoomTambayanSchedule[] = $derived(
-    items
+  let normalizedItems: RoomTambayanScheduleNormalized[] = $derived(
+    items.map(normalizeRoomTambayanSchedule)
+  );
+
+  let sortedItems: RoomTambayanScheduleNormalized[] = $derived(
+    normalizedItems
       .slice()
       .sort((a, b) => {
         //should display selected items on top then do the sort order
 
         const modifier = sorting.order === SortOrder.ascending ? 1 : -1;
-        if (a[sorting.column] < b[sorting.column]) return -1 * modifier;
-        if (a[sorting.column] > b[sorting.column]) return 1 * modifier;
+        const aVal = a[sorting.column];
+        const bVal = b[sorting.column];
+
+        // Handle null values
+        if (aVal === null && bVal === null) return 0;
+        if (aVal === null) return 1;
+        if (bVal === null) return -1;
+
+        if (aVal < bVal) return -1 * modifier;
+        if (aVal > bVal) return 1 * modifier;
         return 0;
       })
       .filter((item) =>
-        `${item.room} ${item.campus} ${item.time_start} ${item.time_end}`
+        `${item.room} ${item.campus} ${item.time_start} ${item.time_end} ${item.attendance_sheet_code}`
           .toLowerCase()
           .includes(searchFilter.toLowerCase())
       )
@@ -49,10 +69,14 @@
   let addDialogShown = $state(false);
   let editDialogShown = $state(false);
   let deleteDialogShown = $state(false);
+  let linkSheetDialogShown = $state(false);
   let itemToEdit: RoomTambayanSchedule | null = $state(null);
-  let selectedItems: { [key: string]: RoomTambayanSchedule } = $state({});
+  let itemToLink: RoomTambayanSchedule | null = $state(null);
+  let selectedItems: { [key: string]: RoomTambayanScheduleNormalized } = $state(
+    {}
+  );
 
-  function handleRowClick(item: RoomTambayanSchedule) {
+  function handleRowClick(item: RoomTambayanScheduleNormalized) {
     if (selectedItems[item.id]) {
       delete selectedItems[item.id];
     } else {
@@ -77,6 +101,33 @@
   function handleDeleteClick() {
     if (Object.keys(selectedItems).length > 0) {
       deleteDialogShown = true;
+    }
+  }
+
+  function handleLinkSheetClick() {
+    const selectedItemIds = Object.keys(selectedItems);
+    if (selectedItemIds.length === 1) {
+      const selectedId = selectedItemIds[0];
+      const selectedItem = items.find(
+        (item) => item.id.toString() === selectedId
+      );
+      if (selectedItem) {
+        itemToLink = selectedItem;
+        linkSheetDialogShown = true;
+      }
+    }
+  }
+
+  function handleGoToAttendanceSheet() {
+    const selectedItemIds = Object.keys(selectedItems);
+    if (selectedItemIds.length === 1) {
+      const selectedItem = selectedItems[selectedItemIds[0]];
+      if (
+        selectedItem.has_attendance_sheet &&
+        selectedItem.attendance_sheet_id
+      ) {
+        goto(`/proper/attendance?sheet=${selectedItem.attendance_sheet_id}`);
+      }
     }
   }
 
@@ -128,6 +179,11 @@
   {selectedItems}
   onSuccess={handleSuccess}
 />
+<LinkAttendanceSheetDialog
+  bind:shown={linkSheetDialogShown}
+  schedule={itemToLink}
+  onSuccess={handleSuccess}
+/>
 <div
   class="w-full relative overflow-hidden bg-slate-800 border-slate-700 border rounded-lg h-full flex flex-col items-center justify-start gap-2 py-2"
 >
@@ -135,11 +191,15 @@
     >{#if loading}
       <div class="flex gap-1">
         <Throbber --size={"1.2rem"}></Throbber>
-        <span>Fetching</span>
+        <span class="hidden sm:inline">Fetching</span>
       </div>
     {:else}
       <div class="flex items-center gap-2">
-        <span>Showing {sortedItems.length} items</span>
+        <span class="text-xs sm:text-sm"
+          >Showing {sortedItems.length} item{sortedItems.length !== 1
+            ? "s"
+            : ""}</span
+        >
         <button
           onclick={() => onRefresh?.()}
           class="flex items-center gap-1 px-2 text-xs hover:bg-slate-600 text-white/80 hover:text-white rounded-full transition-colors"
@@ -150,7 +210,9 @@
       </div>
     {/if}</span
   >
-  <div class=" w-full p-2 flex items-center justify-center gap-2 rounded-lg">
+  <div
+    class="w-full p-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 rounded-lg"
+  >
     <input
       type="text"
       placeholder="Search..."
@@ -160,23 +222,25 @@
     <div class="flex items-center justify-center gap-2">
       <button
         onclick={() => (addDialogShown = true)}
-        class="flex items-center justify-center gap-1 bg-blue-700 border-blue-500 border hover:bg-blue-600 text-white py-2 px-4 rounded-lg duration-200"
+        class="flex-1 sm:flex-initial flex items-center justify-center gap-1 bg-blue-700 border-blue-500 border hover:bg-blue-600 text-white py-2 px-4 rounded-lg duration-200"
       >
         <MaterialIcon icon="add" size={1.2}></MaterialIcon>
-        Add
+        <span class="hidden sm:inline">Add</span>
       </button>
       <button
         onclick={exportToCSV}
-        class="flex items-center justify-center gap-1 border-slate-500 bg-slate-700 border hover:bg-slate-600 text-white py-2 px-4 rounded-lg duration-200"
+        class="flex-1 sm:flex-initial flex items-center justify-center gap-1 border-slate-500 bg-slate-700 border hover:bg-slate-600 text-white py-2 px-4 rounded-lg duration-200"
       >
-        <MaterialIcon icon="arrow_outward" size={1.2}></MaterialIcon>Export
+        <MaterialIcon icon="arrow_outward" size={1.2}></MaterialIcon><span
+          class="hidden sm:inline">Export</span
+        >
       </button>
     </div>
   </div>
   {#if selectedItems && Object.keys(selectedItems).length > 0}
-    <div class="p-2 sticky w-full top-0">
+    <div class="p-2 sticky w-full top-0 z-10">
       <div
-        class="bg-blue-900/30 border gap-2 border-blue-800 rounded-lg w-full h-14 flex items-center justify-start p-2"
+        class="bg-blue-900/30 border gap-2 border-blue-800 rounded-lg w-full min-h-14 flex flex-wrap items-center justify-start p-2"
       >
         <button
           onclick={() => (selectedItems = {})}
@@ -184,7 +248,7 @@
           class="h-8 flex items-center justify-center rounded-full text-white/80 w-8 hover:bg-white/10"
           ><MaterialIcon icon="clear" size={1.3}></MaterialIcon></button
         >
-        <span class="text-white/80 pr-4"
+        <span class="text-white/80 pr-2 text-sm sm:text-base"
           >{Object.keys(selectedItems).length} selected</span
         >
         {#if Object.keys(selectedItems).length === 1}
@@ -194,6 +258,21 @@
             class="h-8 flex items-center justify-center rounded-full text-white/80 w-10 hover:bg-white/10"
             ><MaterialIcon icon="edit" size={1.3}></MaterialIcon></button
           >
+          <button
+            onclick={handleLinkSheetClick}
+            title="Manage attendance sheet link"
+            class="h-8 flex items-center justify-center rounded-full text-white/80 w-10 hover:bg-white/10"
+            ><MaterialIcon icon="link" size={1.3}></MaterialIcon></button
+          >
+          {#if Object.values(selectedItems)[0]?.has_attendance_sheet}
+            <button
+              onclick={handleGoToAttendanceSheet}
+              title="Go to attendance sheet"
+              class="h-8 flex items-center justify-center rounded-full text-white/80 w-10 hover:bg-white/10"
+              ><MaterialIcon icon="open_in_new" size={1.3}
+              ></MaterialIcon></button
+            >
+          {/if}
         {/if}
 
         <button
@@ -206,8 +285,8 @@
       </div>
     </div>
   {/if}
-  <div class="h-full relative w-full overflow-scroll">
-    <table class="w-full border-collapse min-w-260 text-white rounded-lg">
+  <div class="h-full relative w-full overflow-x-auto overflow-y-auto">
+    <table class="w-full border-collapse min-w-[1000px] text-white rounded-lg">
       <thead class="bg-slate-800 sticky top-0 z-1">
         <tr>
           <TableHeader headerTitle="ID" column="id" {sorting}></TableHeader>
@@ -220,6 +299,7 @@
           ></TableHeader>
           <TableHeader headerTitle="Created at" column="created_at" {sorting}
           ></TableHeader>
+          <th class="px-6 py-3 text-left font-medium">Attendance Sheet</th>
         </tr>
       </thead>
       <tbody>

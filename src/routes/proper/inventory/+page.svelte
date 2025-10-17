@@ -25,7 +25,7 @@
   });
 </script>
 
-<div class="p-4 h-full overflow-hidden">
+<div class="p-2 sm:p-4 h-full overflow-hidden">
   <InventoryTable items={data} {loading} onRefresh={loadInventoryData} />
 </div>
 

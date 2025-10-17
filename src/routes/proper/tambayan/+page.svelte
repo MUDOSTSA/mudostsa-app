@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { readInventory, readRows } from "$lib/supabase";
+  import {
+    readInventory,
+    readRows,
+    readTambayanSchedules,
+  } from "$lib/supabase";
   import type { RoomTambayanSchedule } from "$lib/types";
   import { onMount } from "svelte";
   import TambayanScheduleTable from "../../../components/TambayanScheduleTable.svelte";
@@ -10,7 +14,7 @@
   async function loadRoomTambayanData() {
     loading = true;
     try {
-      const result = await readRows("tambayan");
+      const result = await readTambayanSchedules();
       data = result.data || [];
     } catch (error) {
       console.error("Failed to load Room Tambayan schedule:", error);
@@ -25,7 +29,7 @@
   });
 </script>
 
-<div class="p-4 h-full overflow-hidden">
+<div class="p-2 sm:p-4 h-full overflow-hidden">
   <TambayanScheduleTable
     items={data}
     {loading}

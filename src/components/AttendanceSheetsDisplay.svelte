@@ -7,11 +7,13 @@
     onSelect,
     onRefresh,
     loading = false,
+    selectedSheetId = null,
   }: {
     data: BasicAttendanceSheet[];
     onSelect: (sheet: BasicAttendanceSheet) => any;
     onRefresh?: () => void | Promise<void>;
     loading?: boolean;
+    selectedSheetId?: number | null;
   } = $props();
 
   let searchQuery = $state("");
@@ -92,9 +94,12 @@
     {:else}
       {#each filteredData as sheet}
         {@const processed = processAttendanceSheetName(sheet.name)}
+        {@const isSelected = selectedSheetId === sheet.id}
         <button
           onclick={() => onSelect(sheet)}
-          class="flex w-full hover:bg-slate-700/50 hover:cursor-pointer transition-colors duration-200 items-center justify-between py-2 px-4 border-b border-slate-700"
+          class="flex w-full hover:bg-slate-700/50 hover:cursor-pointer transition-colors duration-200 items-center justify-between py-2 px-4 border-b border-slate-700 {isSelected
+            ? 'bg-blue-700/30 border-l-4 border-l-blue-500'
+            : ''}"
         >
           <div class="flex flex-col gap-1 items-start min-w-0">
             <div class="flex items-center gap-2 w-full min-w-0">

@@ -27,6 +27,41 @@
   let isSubmitting = $state(false);
   let loadingEvents = $state(false);
 
+  // Derived state for prefix detection
+  let detectedPrefix = $derived.by(() => {
+    const name = formData.name.trim();
+    if (name.startsWith("RT-")) return "RT-";
+    if (name.startsWith("M-")) return "M-";
+    return null;
+  });
+
+  function generateRandomCode() {
+    const name = formData.name.trim();
+
+    if (name.startsWith("RT-")) {
+      // RT- prefix: "RT[4-digit number]"
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      return `RT${randomNum}`;
+    } else if (name.startsWith("M-")) {
+      // M- prefix: "MEET[4-digit number]"
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      return `MEET${randomNum}`;
+    } else {
+      // Default: 8 character mixed case code
+      const chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      let code = "";
+      for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    }
+  }
+
+  function handleRandomize() {
+    formData.code = generateRandomCode();
+  }
+
   async function loadEvents() {
     loadingEvents = true;
     try {
@@ -140,6 +175,15 @@
       <p class="text-slate-400 text-xs mt-1">
         Use prefixes: RT- for Room Tambayan, M- for Meetings
       </p>
+      {#if detectedPrefix}
+        <div
+          class="bg-blue-900/30 border border-blue-700/50 text-blue-200 p-2 rounded-md mt-2 text-sm"
+        >
+          ✓ Creating attendance sheet for <strong
+            >{detectedPrefix === "RT-" ? "Room Tambayan" : "Meeting"}</strong
+          >
+        </div>
+      {/if}
     </div>
 
     <div>
@@ -199,13 +243,23 @@
       <label for="code" class="block text-sm font-medium text-white mb-2">
         Access Code *
       </label>
-      <input
-        type="text"
-        id="code"
-        bind:value={formData.code}
-        placeholder="Enter access code for this sheet"
-        class="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
-      />
+      <div class="flex gap-2">
+        <input
+          type="text"
+          id="code"
+          bind:value={formData.code}
+          placeholder="Enter access code for this sheet"
+          class="flex-1 bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+        />
+        <button
+          type="button"
+          onclick={handleRandomize}
+          class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white px-4 py-2 rounded-md transition-colors whitespace-nowrap"
+          title="Generate random code"
+        >
+          🎲 Random
+        </button>
+      </div>
       <p class="text-slate-400 text-xs mt-1">
         Users will enter this code to log their attendance
       </p>

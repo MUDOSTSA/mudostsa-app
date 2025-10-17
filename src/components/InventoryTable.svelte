@@ -130,11 +130,15 @@
     >{#if loading}
       <div class="flex gap-1">
         <Throbber --size={"1.2rem"}></Throbber>
-        <span>Fetching</span>
+        <span class="hidden sm:inline">Fetching</span>
       </div>
     {:else}
       <div class="flex items-center gap-2">
-        <span>Showing {sortedItems.length} items</span>
+        <span class="text-xs sm:text-sm"
+          >Showing {sortedItems.length} item{sortedItems.length !== 1
+            ? "s"
+            : ""}</span
+        >
         <button
           onclick={() => onRefresh?.()}
           class="flex items-center gap-1 px-2 text-xs hover:bg-slate-600 text-white/80 hover:text-white rounded-full transition-colors"
@@ -145,7 +149,9 @@
       </div>
     {/if}</span
   >
-  <div class=" w-full p-2 flex items-center justify-center gap-2 rounded-lg">
+  <div
+    class="w-full p-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 rounded-lg"
+  >
     <input
       type="text"
       placeholder="Search..."
@@ -155,23 +161,25 @@
     <div class="flex items-center justify-center gap-2">
       <button
         onclick={() => (addDialogShown = true)}
-        class="flex items-center justify-center gap-1 bg-blue-700 border-blue-500 border hover:bg-blue-600 text-white py-2 px-4 rounded-lg duration-200"
+        class="flex-1 sm:flex-initial flex items-center justify-center gap-1 bg-blue-700 border-blue-500 border hover:bg-blue-600 text-white py-2 px-4 rounded-lg duration-200"
       >
         <MaterialIcon icon="add" size={1.2}></MaterialIcon>
-        Add
+        <span class="hidden sm:inline">Add</span>
       </button>
       <button
         onclick={exportToCSV}
-        class="flex items-center justify-center gap-1 border-slate-500 bg-slate-700 border hover:bg-slate-600 text-white py-2 px-4 rounded-lg duration-200"
+        class="flex-1 sm:flex-initial flex items-center justify-center gap-1 border-slate-500 bg-slate-700 border hover:bg-slate-600 text-white py-2 px-4 rounded-lg duration-200"
       >
-        <MaterialIcon icon="arrow_outward" size={1.2}></MaterialIcon>Export
+        <MaterialIcon icon="arrow_outward" size={1.2}></MaterialIcon><span
+          class="hidden sm:inline">Export</span
+        >
       </button>
     </div>
   </div>
   {#if selectedItems && Object.keys(selectedItems).length > 0}
-    <div class="p-2 sticky w-full top-0">
+    <div class="p-2 sticky w-full top-0 z-10">
       <div
-        class="bg-blue-900/30 border gap-2 border-blue-800 rounded-lg w-full h-14 flex items-center justify-start p-2"
+        class="bg-blue-900/30 border gap-2 border-blue-800 rounded-lg w-full min-h-14 flex flex-wrap items-center justify-start p-2"
       >
         <button
           onclick={() => (selectedItems = {})}
@@ -179,7 +187,7 @@
           class="h-8 flex items-center justify-center rounded-full text-white/80 w-8 hover:bg-white/10"
           ><MaterialIcon icon="clear" size={1.3}></MaterialIcon></button
         >
-        <span class="text-white/80 pr-4"
+        <span class="text-white/80 pr-2 text-sm sm:text-base"
           >{Object.keys(selectedItems).length} selected</span
         >
         {#if Object.keys(selectedItems).length === 1}
@@ -205,11 +213,11 @@
       </div>
     </div>
   {/if}
-  <div class="h-full relative w-full overflow-scroll">
-    <table class="w-full border-collapse min-w-260 text-white rounded-lg">
+  <div class="h-full relative w-full overflow-x-auto overflow-y-auto">
+    <table class="w-full border-collapse min-w-[800px] text-white rounded-lg">
       <thead class="bg-slate-800 sticky top-0 z-1">
         <tr>
-          <th></th>
+          <th class="w-12"></th>
           <TableHeader headerTitle="ID" column="id" {sorting}></TableHeader>
           <TableHeader headerTitle="Item" column="name" {sorting}></TableHeader>
           <TableHeader headerTitle="Quantity" column="quantity" {sorting}

@@ -12,6 +12,8 @@
     normalizeAttendanceRecord,
   } from "$lib/types";
   import { onMount } from "svelte";
+  import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
   import AttendanceRecordsTable from "../../../components/AttendanceRecordsTable.svelte";
   import Title from "../../../components/Title.svelte";
   import MaterialIcon from "../../../components/MaterialIcon.svelte";
@@ -46,9 +48,18 @@
 
   onMount(async () => {
     await loadAttendanceSheets();
+
+    // Check for sheet query parameter on mount
+    const sheetId = $page.url.searchParams.get("sheet");
+    if (sheetId) {
+      const id = parseInt(sheetId, 10);
+      if (!isNaN(id)) {
+        await loadAttendanceSheet(id, false); // Don't update URL on initial load
+      }
+    }
   });
 
-  async function loadAttendanceSheet(id: number) {
+  async function loadAttendanceSheet(id: number, updateUrl: boolean = true) {
     recordsLoading = true;
     try {
       const result = await readAttendanceSheet(id);
@@ -64,6 +75,16 @@
         }
 
         console.log("Loaded attendance sheet:", result.data);
+
+        // Update URL with sheet parameter if requested
+        if (updateUrl) {
+          const url = new URL(window.location.href);
+          url.searchParams.set("sheet", id.toString());
+          goto(url.pathname + url.search, {
+            replaceState: true,
+            noScroll: true,
+          });
+        }
       } else {
         console.error("Failed to load attendance sheet:", result.error);
         selectedSheet = null;
@@ -95,6 +116,12 @@
   function handleDeleteSheetSuccess() {
     selectedSheet = null;
     attendanceRecords = [];
+
+    // Clear sheet query parameter
+    const url = new URL(window.location.href);
+    url.searchParams.delete("sheet");
+    goto(url.pathname + url.search, { replaceState: true, noScroll: true });
+
     loadAttendanceSheets();
   }
 
@@ -154,6 +181,7 @@
         <AttendanceSheetsDisplay
           {data}
           {loading}
+          selectedSheetId={selectedSheet?.id || null}
           onRefresh={loadAttendanceSheets}
           onSelect={(sheet) => {
             loadAttendanceSheet(sheet.id);

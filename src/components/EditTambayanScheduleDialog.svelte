@@ -1,9 +1,10 @@
 <script lang="ts">
   import Dialog from "./Dialog.svelte";
+  import MaterialIcon from "./MaterialIcon.svelte";
   import { insertTambayanScheduleSchema } from "$lib/zod/tambayan_forms";
-  import { updateRow } from "$lib/supabase";
+  import { updateRow, readRows } from "$lib/supabase";
   import { currentUser } from "$lib/stores/user";
-  import type { RoomTambayanSchedule } from "$lib/types";
+  import type { RoomTambayanSchedule, BasicAttendanceSheet } from "$lib/types";
 
   let {
     shown = $bindable(false),
@@ -20,10 +21,26 @@
     campus: "",
     time_start: "",
     time_end: "",
+    attendance_sheet: null as number | null,
   });
 
+  let attendanceSheets: BasicAttendanceSheet[] = $state([]);
+  let loadingSheets = $state(false);
   let errors = $state<Record<string, string>>({});
   let isSubmitting = $state(false);
+
+  async function loadAttendanceSheets() {
+    loadingSheets = true;
+    try {
+      const result = await readRows("attendance_sheets", {});
+      attendanceSheets = result.data || [];
+    } catch (err) {
+      console.error("Failed to load attendance sheets:", err);
+      attendanceSheets = [];
+    } finally {
+      loadingSheets = false;
+    }
+  }
 
   function formatDateTimeLocal(date: Date): string {
     const d = new Date(date);
@@ -38,6 +55,7 @@
         campus: item.campus,
         time_start: formatDateTimeLocal(new Date(item.time_start)),
         time_end: formatDateTimeLocal(new Date(item.time_end)),
+        attendance_sheet: item.attendance_sheet?.id || null,
       };
     } else {
       formData = {
@@ -45,6 +63,7 @@
         campus: "",
         time_start: "",
         time_end: "",
+        attendance_sheet: null,
       };
     }
     errors = {};
@@ -76,6 +95,7 @@
         ...validatedData,
         time_start: new Date(validatedData.time_start),
         time_end: new Date(validatedData.time_end),
+        attendance_sheet: formData.attendance_sheet,
       };
 
       const result = await updateRow("tambayan", item.id, updateData);
@@ -113,6 +133,7 @@
   // Reset form when dialog opens with new item or closes
   $effect(() => {
     if (shown && item) {
+      loadAttendanceSheets();
       resetForm();
     } else if (!shown) {
       resetForm();
@@ -169,18 +190,20 @@
 
       <label for="edit-campus" class="flex ml-[2px] flex-col gap-1">
         <span class="text-sm">Campus</span>
-        <input
-          placeholder="Campus"
-          class="bg-slate-800 p-2 -ml-[2px] rounded-lg border border-slate-700 {errors.campus
-            ? 'border-red-500'
-            : ''}"
-          type="text"
+        <select
           id="edit-campus"
           name="campus"
           bind:value={formData.campus}
+          class="bg-slate-800 p-2 -ml-[2px] rounded-lg border border-slate-700 {errors.campus
+            ? 'border-red-500'
+            : ''}"
           disabled={isSubmitting}
           required
-        />
+        >
+          <option value="" disabled>Select campus</option>
+          <option value="Intramuros">Intramuros</option>
+          <option value="Makati">Makati</option>
+        </select>
         {#if errors.campus}
           <span class="text-red-400 text-xs">{errors.campus}</span>
         {/if}
@@ -222,6 +245,31 @@
         {#if errors.time_end}
           <span class="text-red-400 text-xs">{errors.time_end}</span>
         {/if}
+      </label>
+
+      <label for="edit-attendance-sheet" class="flex ml-[2px] flex-col gap-1">
+        <span class="text-sm">Attendance Sheet (Optional)</span>
+        {#if loadingSheets}
+          <div class="flex items-center gap-2 text-white/60 text-sm">
+            <MaterialIcon icon="hourglass_empty" size={1.2} />
+            <span>Loading sheets...</span>
+          </div>
+        {:else}
+          <select
+            id="edit-attendance-sheet"
+            bind:value={formData.attendance_sheet}
+            class="bg-slate-800 p-2 -ml-[2px] rounded-lg border border-slate-700"
+            disabled={isSubmitting}
+          >
+            <option value={null}>No attendance sheet</option>
+            {#each attendanceSheets as sheet}
+              <option value={sheet.id}>{sheet.name} (ID: {sheet.id})</option>
+            {/each}
+          </select>
+        {/if}
+        <span class="text-xs text-white/50"
+          >Link an existing attendance sheet to this schedule</span
+        >
       </label>
 
       <div class="flex justify-center pt-4 gap-2">

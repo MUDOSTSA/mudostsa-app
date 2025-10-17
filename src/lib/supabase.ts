@@ -10,6 +10,7 @@ import type {
   BasicAttendanceSheet,
   InventoryItem,
   Member,
+  RoomTambayanSchedule,
 } from "./types";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -69,12 +70,26 @@ export const readRows = async (
 ) => {
   return supabase.from(table).select("*").match(query);
 };
+export const readTambayanSchedules: () => Promise<
+  PostgrestSingleResponse<RoomTambayanSchedule[]>
+> = async () => {
+  return supabase
+    .from(`tambayan`)
+    .select("*, attendance_sheet:attendance_sheets (*)");
+};
 
 export const readNavigationLinks = async () => {
   return supabase
     .from("navigation")
     .select("*")
     .order("position", { ascending: true });
+};
+export const readEventTitle: (
+  slug: string
+) => Promise<PostgrestSingleResponse<{ event_title: string }>> = async (
+  slug
+) => {
+  return supabase.from("events").select("event_title").eq("id", slug).single();
 };
 
 export const readInventory: () => Promise<
