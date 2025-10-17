@@ -10,13 +10,10 @@
   export let collapsed = true;
   export let links: Link[] = [];
   export let selected = "home";
-  export let tempExpand = false;
 </script>
 
 <nav
-  onmouseenter={() => (tempExpand = true)}
-  onmouseleave={() => (tempExpand = false)}
-  class="{collapsed && !tempExpand
+  class="{collapsed
     ? 'w-18'
     : 'w-52 '} border-r border-blue-800 rounded-r-xl overflow-hidden h-screen gap-2 transition-all duration-200 p-4 flex items-start justify-start flex-col bg-blue-950"
 >
@@ -35,7 +32,7 @@
           : ''} flex w-full gap-2 text-blue-100 p-2 rounded-lg opacity-80 hover:opacity-100 transition-all duration-200 hover:bg-blue-900/50 items-center justify-start"
       >
         <span class="material-icons text-sm">{link.icon}</span>
-        {#if !collapsed || tempExpand}
+        {#if !collapsed}
           <span
             transition:animate={{ duration: 200 }}
             class="text-blue-100 text-sm whitespace-nowrap">{link.name}</span
@@ -54,7 +51,7 @@
         >account_circle</span
       >
     </div>
-    {#if !collapsed || tempExpand}
+    {#if !collapsed}
       <div
         transition:animate={{ duration: 200 }}
         class="flex items-center gap-2 text-blue-100 w-full justify-between"
