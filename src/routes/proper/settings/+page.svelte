@@ -116,7 +116,7 @@
               : 'bg-green-900/30 border-green-600'}"
           >
             {#if updateAvailable}
-              <div class="flex items-start gap-3">
+              <div class="flex items-start gap-3 text-white">
                 <MaterialIcon icon="info" size={1.5} />
                 <div class="flex-1">
                   <p class="text-white font-medium">

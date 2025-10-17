@@ -1,6 +1,6 @@
 [package]
 name = "mudostsa-app"
-version = "0.2.0"
+version = "0.2.1"
 description = "Official MU-DOST SA Online System. Do not distribute."
 authors = ["Yuan Benedict O. Suarez"]
 edition = "2021"
