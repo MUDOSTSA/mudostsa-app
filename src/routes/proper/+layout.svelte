@@ -9,6 +9,7 @@
   import type { Link } from "$lib/types";
   import Title from "../../components/Title.svelte";
   import { navigationStack } from "$lib/stores/navigation";
+  import Throbber from "../../components/Throbber.svelte";
 
   let { children } = $props();
   let links: Link[] = $state([]);
@@ -71,7 +72,7 @@
 <div class="bg-slate-900 min-h-dvh w-full flex">
   {#if loading}
     <div class="flex-1 flex items-center justify-center">
-      <div class="text-blue-100">Loading...</div>
+      <Throbber />
     </div>
   {:else}
     <NavigationBar {links} selected={page.data.title.toLowerCase()}
